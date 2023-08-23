@@ -1,8 +1,37 @@
-const http = require("http");
+const express = require("express");
+const server = require("http").createServer();
+const app = express();
 
-http.createServer(function (req, res) {
-	res.write("response? response.");
-	res.end();
-}).listen(3000);
+app.get('/', function(req, res) {
+	res.sendFile('index.html', {root: __dirname});
+});
 
-console.log("server started on port 3000");
+server.on('request', app);
+server.listen(3000, function() { console.log('Listening on 3000'); });
+
+/** Websockets **/
+const WebSocketServer = require('ws').Server;
+
+const wss = new WebSocketServer({server: server});
+
+wss.on('connection', function connection(ws) {
+	const numClients = wss.clients.size;
+	console.log('Clients connected', numClients);
+
+	wss.broadcast(`Current visitors: ${numClients}`);
+
+	if (ws.readyState === we.OPEN) {
+		ws.send('Welcome to my server');
+	}
+
+	ws.on('close', function close() {
+		console.log('A clent has disconnected');
+	});
+});
+
+wss.broadcast = function broadcast(data) {
+	wss.clients.forEach(function each(client) {
+		client.send(data);
+	});
+};
+
